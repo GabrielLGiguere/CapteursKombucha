@@ -1,0 +1,120 @@
+#include <Adafruit_NeoPixel.h>
+
+
+//https://stackoverflow.com/questions/25823179/driving-two-ultrasonic-sensor-with-arduino 
+
+const int LED_PIN = D6;
+const int LED_COUNT = 4;
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+int TriggerPIN1 = D3;
+int EchoPIN1 = D4;
+int TriggerPIN2 = D8;
+int EchoPIN2 = D7;
+int myArray1[5] = {0,0,0,0,0};
+int monTotal1 = 0;
+int MaMoy1 = 0;
+int distObjet1 = 0;
+int myArray2[5] = {0,0,0,0,0};
+int monCompteur = 0;
+int monTotal2 = 0;
+int MaMoy2 = 0;
+int distObjet2 = 0;
+//const int ledPin = D6;//the led attach to
+int inputValue = 0;//variable to store the value coming from sensor
+int outputValue = 0;//variable to store the output value
+
+void setup(){
+  Serial.begin(9600);
+  pinMode(TriggerPIN1,OUTPUT);
+  pinMode(EchoPIN1,INPUT);
+  pinMode(TriggerPIN2,OUTPUT);
+  pinMode(EchoPIN2,INPUT);
+  strip.begin();
+  strip.show();
+  }
+
+void loop(){  
+  if (monCompteur ==5) {
+    distObjet1 = MaMoy1 ;
+    distObjet2 = MaMoy2;
+  }
+  monCompteur++;
+  
+  digitalWrite(TriggerPIN1,LOW);
+  delayMicroseconds(2);
+  digitalWrite(TriggerPIN1,HIGH);
+  delayMicroseconds(2);
+  digitalWrite(TriggerPIN1,LOW);
+
+  long timedelay = pulseIn(EchoPIN1,HIGH);
+  int distance1 = 0.0343 * (timedelay/2);
+
+  Serial.print("Sensor 1 : ");
+  Serial.println(distance1);
+
+  delayMicroseconds(60);
+
+  digitalWrite(TriggerPIN2,LOW);
+  delayMicroseconds(2);
+  digitalWrite(TriggerPIN2,HIGH);
+  delayMicroseconds(2);
+  digitalWrite(TriggerPIN2,LOW);
+
+  long td = pulseIn(EchoPIN2,HIGH);
+  int distance2 = 0.0343 * (td/2);
+
+  Serial.print("Sensor 2 : ");
+  Serial.println(distance2);
+
+  //int inputValue = distance;
+  //int outputValue = map(inputValue, 0, 2300, 0, 20000);
+  //analogWrite(ledPin, outputValue);
+  myArray1[monCompteur] = distance1; 
+  myArray2[monCompteur] = distance2; 
+  // calcul de la moyenne 
+  for (int i = 0; i< 5; i = i+1){
+    monTotal1 = myArray1[i] + monTotal1;
+  }
+   for (int i = 0; i< 5; i = i+1){
+    monTotal2 = myArray2[i] + monTotal2;
+  }
+ MaMoy1 = monTotal1 / 5; // myArray.length fonction prédéfinie qui donne le nombre d'éléments dans un tableau
+ MaMoy2 = monTotal2 / 5; // myArray.length fonction prédéfinie qui donne le nombre d'éléments dans un tableau
+ 
+  monTotal1 = 0;
+  monTotal2 = 0;
+
+  Serial.print("maMoy1 = ");
+  //Serial.println(MaMoy1);
+  Serial.print("maMoy2 = ");
+  //Serial.println(MaMoy2);
+  if (distance1 >= distObjet1 && distance2 >= distObjet2 && monCompteur >=5 ) {
+   Serial.print("hello world ");
+    strip.clear();
+    //analogWrite(ledPin, 0);
+  }
+   
+  else {
+    if  (distance1 >= distance2 && distance2 < distObjet2 && monCompteur >=5 ) {
+      int inputValue = distance1;
+      int outputValue = map(inputValue, 0, distObjet1, 0, 255); //set.brightness fonctionne de 0-255
+      strip.setPixelColor(0, 255, 0, 0);
+      strip.show();
+      strip.setBrightness(outputValue);
+      
+      //analogWrite(ledPin, outputValue);
+
+    }
+
+    else if (distance2 >= distance1 && distance1 < distObjet1 && monCompteur >=5 ) {
+      int inputValue = distance2;
+      int outputValue = map(inputValue, 0, distObjet2, 0, 255); //une des valeurs devrait etre distObjet soit comme tel ou modifie
+      strip.setPixelColor(0, 255, 0, 0);
+      strip.show();
+      strip.setBrightness(outputValue);
+      //analogWrite(ledPin, outputValue);
+    }
+  }
+
+  
+  }
